@@ -26,6 +26,7 @@ RATING_SUMMARY_ENCHANTABLES = {
 		[INVSLOT_FEET] = "Feet ",
 		[INVSLOT_HAND] = "Hands ",
 		[INVSLOT_LEGS] = "Legs ",
+		[INVSLOT_NECK] = "Neck",
 		[INVSLOT_MAINHAND] = "\nMainHand\n",
 		[INVSLOT_OFFHAND] = "\nOffHand\n",
 		[INVSLOT_WRIST] = "Wrist ",
@@ -121,6 +122,45 @@ elseif(GetLocale()=="zhCN") then
 		-- [INVSLOT_WAIST] = "腰",
 		-- [INVSLOT_BACK] = "披",
 		-- [INVSLOT_HAND] = "手",
+	-- }
+elseif(GetLocale()=="koKR") then
+	--stat category in short
+	RATING_SUMMARY_MELEE_CRIT = "M.CR:"
+	RATING_SUMMARY_SPELL_CRIT = "S.CR:"
+	RATING_SUMMARY_MANA_REGEN = "MP/5:"
+	RS_STATS_ONLY_FROM_GEARS = "간편하게 정보보기"
+	RATING_SUMMARY_STA_NO_BONUS = "NO TALENT BONUS"
+	--RATING_SUMMARY_ITEM_LEVEL_TITLE = "장비 수준"
+	RATING_SUMMARY_ITEM_LIST_TITLE = "장비 목록"
+	RATING_SUMMARY_ITEM_LEVEL_SHORT = "ilv"
+	RATING_SUMMARY_ITEM_LEVEL_FORMAT = "%2d * %3d lvl"
+	RATING_SUMMARY_GEM = "보석"
+	RATING_SUMMARY_EXTRA_SOCKET = "슬롯"
+	-- RATING_SUMMARY_TINKER = "수리"
+	RATING_SUMMARY_ENCHANTABLES = {
+	--	[INVSLOT_BACK] = "Back",
+	--	[INVSLOT_CHEST] = "[가슴]",
+	--	[INVSLOT_FEET] = "[장화]",
+	--	[INVSLOT_HAND] = "Hands",
+	--	[INVSLOT_LEGS] = "Legs",
+		[INVSLOT_NECK] = "장갑",
+		[INVSLOT_MAINHAND] = "[주 무기]",
+	--	[INVSLOT_OFFHAND] = "OffHand",
+		[INVSLOT_WRIST] = "[손목]",
+		--HeadSlot = "Head",
+	--	[INVSLOT_SHOULDER] = "Shoulder",
+		[INVSLOT_FINGER1] = "[반지1]",
+		[INVSLOT_FINGER2] = "[반지2]",
+	}
+	RATING_SUMMARY_BLACKSMITH = {
+	--	[INVSLOT_WAIST] = "Waist",
+	--	[INVSLOT_WRIST] = "Wrist",
+	--	[INVSLOT_HAND] = "Hands",
+}
+-- RATING_SUMMARY_ENGINEERING = {
+		-- [INVSLOT_WAIST] = "Waist ",
+		-- [INVSLOT_BACK] = "Back ",
+		-- [INVSLOT_HAND] = "Hands",
 	-- }
 else
 	
