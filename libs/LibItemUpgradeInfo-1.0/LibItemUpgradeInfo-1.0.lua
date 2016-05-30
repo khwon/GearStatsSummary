@@ -49,6 +49,9 @@ local upgradeTable = {
 	[505] = { upgrade = 4, max = 4, ilevel = 16 },
 	[506] = { upgrade = 5, max = 6, ilevel = 20 },
 	[507] = { upgrade = 6, max = 6, ilevel = 24 },
+	[529] = { upgrade = 0, max = 2, ilevel = 0 },
+	[530] = { upgrade = 1, max = 2, ilevel = 5 },
+	[531] = { upgrade = 2, max = 2, ilevel = 10 },
 }
 do
 	local stub = { ilevel = 0 }
@@ -66,7 +69,12 @@ end
 --   Number - The upgrade ID (possibly 0), or nil if the input is invalid or
 --            does not contain upgrade info
 function lib:GetUpgradeID(itemString)
-	return tonumber(itemString:match("item:%d+:%d+:%d+:%d+:%d+:%d+:%-?%d+:%-?%d+:%d+:(%d+)"))
+-- itemID:enchant:gem1:gem2:gem3:gem4:suffixID:uniqueID:level:specializationID:upgradeType:instanceDifficultyID:numBonusIDs:bonusID1:bonusID2...:upgradeId
+	local upgrade_type = tonumber(itemString:match("item:%d+:%d+:%d+:%d+:%d+:%d+:%-?%d+:%-?%d+:%d+:%d+:(%d+)"))
+	if upgrade_type == 0 then
+		return nil
+	end
+	return tonumber(itemString:match(":(%d+)|h"))
 end
 
 -- GetCurrentUpgrade(id)
