@@ -1,8 +1,26 @@
 local InspectLess = LibStub("LibInspectLess-1.0")
-local ISP = LibStub("LibItemStatsPlus")
 local itemlink_buff = {}
 local OFFSET_X, OFFSET_Y = 2, 2;
 local INVSLOT_AVALIABLE = 15
+
+local tip
+if not tip then
+	-- Create a custom tooltip for scanning
+	tip = CreateFrame("GameTooltip", "GearStatsSummaryTooltip", nil, "GameTooltipTemplate")
+	tip:SetOwner(UIParent, "ANCHOR_NONE")
+	for i = 1, 40 do
+		tip[i] = _G["GearStatsSummaryTooltipTextLeft"..i]
+		if not tip[i] then
+			tip[i] = tip:CreateFontString()
+			tip:AddFontStrings(tip[i], tip:CreateFontString())
+			_G["GearStatsSummaryTooltipTextLeft"..i] = tip[i]
+		end
+	end
+elseif not _G["GearStatsSummaryTooltipTextLeft40"] then
+	for i = 1, 40 do
+		_G["GearStatsSummaryTooltipTextLeft"..i] = tip[i]
+	end
+end
 
 local function SetOrHookScript(frame, scriptName, func)
 	if( frame:GetScript(scriptName) ) then
@@ -34,25 +52,6 @@ function GearStatsSummary_SetupHook()
 	SetOrHookScript(InspectFrame, "OnShow", GearStatsSummary_InspectFrame);
 	SetOrHookScript(InspectFrame, "OnHide", GearStatsSummary_InspectFrame_OnHide);
 	hooksecurefunc("InspectFrame_UnitChanged", GearStatsSummary_InspectFrame_UnitChanged);
-end
-
-local tip
-if not tip then
-	-- Create a custom tooltip for scanning
-	tip = CreateFrame("GameTooltip", "GearStatsSummaryTooltip", nil, "GameTooltipTemplate")
-	tip:SetOwner(UIParent, "ANCHOR_NONE")
-	for i = 1, 40 do
-		tip[i] = _G["GearStatsSummaryTooltipTextLeft"..i]
-		if not tip[i] then
-			tip[i] = tip:CreateFontString()
-			tip:AddFontStrings(tip[i], tip:CreateFontString())
-			_G["GearStatsSummaryTooltipTextLeft"..i] = tip[i]
-		end
-	end
-elseif not _G["GearStatsSummaryTooltipTextLeft40"] then
-	for i = 1, 40 do
-		_G["GearStatsSummaryTooltipTextLeft"..i] = tip[i]
-	end
 end
 
 local GemSlots = {
@@ -102,8 +101,8 @@ function GearStatsSummary_UpdateAnchor(doll, insp)
 			GearStatsSummarySelfFrame:SetTemplate("Transparent")
 			GearStatsSummaryTargetFrame:SetFrameLevel(CharacterFrame:GetFrameLevel())
 			if E == 1 then
-				unpack(ElvUI).Skins:HandleCloseButton(GearStatsSummarySelfFrameCloseButton)
-				unpack(ElvUI).Skins:HandleCloseButton(GearStatsSummaryTargetFrameCloseButton)
+				ElvUI[1].Skins:HandleCloseButton(GearStatsSummarySelfFrameCloseButton)
+				ElvUI[1].Skins:HandleCloseButton(GearStatsSummaryTargetFrameCloseButton)
 			else
 				GearStatsSummarySelfFrameCloseButton:SkinCloseButton()
 				GearStatsSummaryTargetFrameCloseButton:SkinCloseButton()
@@ -115,7 +114,7 @@ function GearStatsSummary_UpdateAnchor(doll, insp)
 		if E~= nil then
 			GearStatsSummarySelfFrame:SetFrameLevel(CharacterFrame:GetFrameLevel())
 			if E == 1 then
-				unpack(ElvUI).Skins:HandleCloseButton(GearStatsSummarySelfFrameCloseButton)
+				ElvUI[1].Skins:HandleCloseButton(GearStatsSummarySelfFrameCloseButton)
 			else
 				GearStatsSummarySelfFrameCloseButton:SkinCloseButton()
 			end
@@ -136,8 +135,6 @@ function GearStatsSummary_OnEvent(self, event, ...)
 
 	if event == "VARIABLES_LOADED" then
 		if RATING_SUMMARY_ANNOUNCE then DEFAULT_CHAT_FRAME:AddMessage(RATING_SUMMARY_ANNOUNCE) end
-		--GearStatsSummarySelfFrame:SetScale(0.90)
-		--GearStatsSummaryTargetFrame:SetScale(0.90)
 
 		SetOrHookScript(PaperDollFrame, "OnShow", GearStatsSummary_PaperDollFrame_OnShow);
 		SetOrHookScript(PaperDollFrame, "OnHide", GearStatsSummary_PaperDollFrame_OnHide);
@@ -233,10 +230,6 @@ function GearStatsSummary_InspectReady(event, unit, guid, done)
 			local tiptext = getglobal(frame:GetName().."Text"):GetText();
 
 			--主天赋显示在装备等级后
-		--	local talent = GetInspectSpecialization(unit);
-			
-		--	talent = talent and talent>0 and select(2, GetSpecializationInfoByID(talent))
-		--	if talent then tiptext = tiptext:gsub("([^\n]*"..RATING_SUMMARY_ITEM_LEVEL_SHORT.."：".."[^\n]*)", "%1 ("..select(2, GetSpecializationInfo(talent, true)).." ) ") end
 			local talent = GetTalentSpec(unit)
 			if talent then tiptext = tiptext:gsub("([^\n]*"..RATING_SUMMARY_ITEM_LEVEL_SHORT.."：".."[^\n]*)", "%1 ("..talent.." ) ") end
 			
@@ -321,40 +314,6 @@ function GearStatsSummary_SetFrameText(frame, tiptitle, tiptext, unit)
 
 end
 
---local get_unit_gem_info = U1GetUnitGemInfo
---local get_unit_enchant_info = U1GetUnitEnchantInfo
-local SpecIDToSpecIndex = {
-70, 64, 252, 258, 255, 249, 261, 61, 264, 267, 101,
-}
-local ArmorBonusForSpec = {
-	["CASTER"] = {
-		PALADIN = "INT",
-		PRIEST = "INT",
-		WARLOCK = "INT",
-		SHAMAN = "INT",
-		MAGE = "INT",
-		DRUID = "INT",
-		MONK = "INT",
-	},
-	["TANK"] = {
-		DRUID = "AGI",
-		PALADIN = "STA",
-		DEATHKNIGHT = "STA",
-		MONK = "AGI",
-	},
-	["MELEE"] = {
-		WARRIOR = "STR",
-		SHAMAN = "AGI",
-		ROGUE = "AGI",
-		DRUID = "AGI",
-		MONK = "AGI",
-		DEATHKNIGHT = "STR",
-		PALADIN = "STR",
-	},
-	["RANGED"] = {
-		HUNTER = "AGI",
-	},
-}
 function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	local unit = "player";
 	if(GearStatsSummaryTargetFrame == frame) then
@@ -379,9 +338,7 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 			spec = GetSpecializationInfo(spec)
 		end
 	end
-	--[[if spec ~= nil then
-		local role = GetSpecializationRoleByID(spec)
-	end]]
+
 	if not inspecting then
 		active, inact = GearStatsSummary_GetTalentString(false);
 	elseif ready then
@@ -400,67 +357,17 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	
 	tiptext=tiptext.."\n\n"..NORMAL_FONT_COLOR_CODE..RS_STATS_ONLY_FROM_GEARS..FONT_COLOR_CODE_CLOSE
 
-	local cat, v;
-	local Catalog;
-	if spec~=nil and GearStatsSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]] ~= nil then
-		Catalog = GearStatsSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]];
-		--print(spec - SpecIDToSpecIndex[ucindex])
-		if sum.ArmorBonus ~= nil then
-			local ABS = GearStatsSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]][2]
-			ABS = ArmorBonusForSpec[ABS][uc]
-			ABS = StatToStatName[ABS]
-			--print(sum[ABS])
-			if sum[ABS]~=nil then
-				sum[ABS] = floor(sum[ABS] * 1.05)
-			end
-			--print(sum[ABS])
-		end
-	else
-		Catalog = GearStatsSummary_CLASS_STAT["ALL"]
-		--print("Catalog")
-		spec = 0
-	end
-	--print(spec.." "..(spec - SpecIDToSpecIndex[ucindex]))
-	for _, cat in pairs(Catalog) do
-		local catStr = "";
-		for _, stat in pairs(GearStatsSummary_STAT[cat]) do
-			--ChatFrame1:AddMessage(stat);
-			local func = GearStatsSummary_Calc[stat]
-			local s1,s2;
-			if not func then
-				s1 = sum[StatToStatName[stat]] or 0
-			else
-				s1,s2 = func(sum, StatToStatName[stat], sum[StatToStatName[stat]] or 0, uc, ul, spec)
-			end
-			local ff = GearStatsSummary_FORMAT[stat] or GREEN_FONT_COLOR_CODE.."%d"..FONT_COLOR_CODE_CLOSE;
-			if(type(s1)~="number") then
-				--ChatFrame1:AddMessage(stat..":"..tostring(s1))
-			elseif(s1 and s1>0) then
-				local sname = _G[StatToStatName[stat]];
-				
-				sname = NORMAL_FONT_COLOR_CODE..sname..":"..FONT_COLOR_CODE_CLOSE;
-				ff = sname..ff; 
-				if stat == "MASTERY" and active~=nil then
-					catStr = catStr.."\n"..format(ff, s1, active, s2)
-					if sum.ArmorBonus == nil then catStr = catStr.."\n\n".."|cffff0000"..NONE..ARMOR..SPECIALIZATION.."!|r" end
-				else
-					if not s2 then s2 = '' end
-					if pcall(format, ff, s1, s2) then
-						catStr = catStr.."\n"..format(ff, s1, s2)
-					end
-				end
-				--ChatFrame1:AddMessage(format(ff, s1, s2, s3, s4))
-			end
-		end
-		if catStr ~="" then
-			if tiptext ~= "" then tiptext = tiptext.."\n"; end
-			tiptext = tiptext.."\n"..HIGHLIGHT_FONT_COLOR_CODE..(GearStatsSummary_STATS_CAT[cat] or cat)..":"..FONT_COLOR_CODE_CLOSE;
-			tiptext = tiptext..catStr;
-		end
-	end
 	--item levels
 	if tiptext ~= "" then tiptext = tiptext.."\n"; end
-	tiptext = tiptext.."\n"..HIGHLIGHT_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_TITLE..":"..FONT_COLOR_CODE_CLOSE;
+
+	tiptext = tiptext.."\n"..HIGHLIGHT_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LIST_TITLE..":"..FONT_COLOR_CODE_CLOSE;
+	for k, v in pairs(sum["ItemLink"]) do
+		if v then
+			tiptext = tiptext.."\n"..v
+		end		
+	end
+
+	tiptext = tiptext.."\n\n"..HIGHLIGHT_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_TITLE..":"..FONT_COLOR_CODE_CLOSE;
 	for v = 7, 2, -1 do
 		if(sum["ITEMCOUNT"..v]) then
 			local _,_,_,colorCode = GetItemQualityColor(v)
@@ -487,11 +394,6 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	if total_extra_socket ~= 0 then
 		tiptext = tiptext .. ('\n'..RATING_SUMMARY_EXTRA_SOCKET..': '..(total_extra_socket==has_extra_socket and "%d" or "|cffff0000%d|r")..'/%d |cffff0000%s|r'):format(has_extra_socket, total_extra_socket, missing_extra_socket)
 	end
-	
-	-- local total_tinker, has_tinker, missing_tinker = (sum["CanTinker"] or 0), (sum["HasTinker"] or 0), sum["TinkerMissing"]
-	-- if total_tinker ~= 0 then
-		-- tiptext = tiptext .. ('\n'..RATING_SUMMARY_TINKER..': '..(total_tinker==has_tinker and "%d" or "|cffff0000%d|r")..'/%d |cffff0000%s|r'):format(has_tinker, total_tinker, missing_tinker)
-	-- end
 
 	--talent
 	if not inspecting then
@@ -520,56 +422,43 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 	if(inspecting) then unit=InspectFrame.unit end
 	if(tipUnit) then unit=tipUnit end
 	local _, _, ucindex = UnitClass(unit)
-	--local _, ur = UnitRace(unit)
-	--local ul = UnitLevel(unit)
-	
-	local isEnchanting, isBlacksmithing--, isEngineering
-	if unit == "player" then
-		local prof1, prof2, _, _, _, _ = GetProfessions()
-		if prof1 then
-			local _, prof1_texture, prof1_lv, _, _, _, _, _ = GetProfessionInfo(prof1)
-			if (prof1_texture:find('Trade_Engraving') and prof1_lv >= 550) then
-				isEnchanting = true
-			elseif (prof1_texture:find('Trade_BlackSmithing') and prof1_lv >= 550) then
-				isBlacksmithing = true
-			-- elseif (prof1_texture:find('Trade_Engineering') and prof1_lv >= 550) then
-				-- isEngineering = true
-			end
-		end
-		if prof2 then
-			local _, prof2_texture, prof2_lv, _, _, _, _, _ = GetProfessionInfo(prof2)
-			if (prof2_texture:find('Trade_Engraving') and prof2_lv >= 550) then
-				isEnchanting = true
-			elseif (prof2_texture:find('Trade_BlackSmithing') and prof2_lv >= 550) then
-				isBlacksmithing = true
-			-- elseif (prof2_texture:find('Trade_Engineering') and prof2_lv >= 550) then
-				-- isEngineering = true
-			end
-		end
-	end
 
 	local sum = {};
+	local ItemUpgradeInfo = LibStub("LibItemUpgradeInfo-1.0")
 	sum["EnchantMissing"] = ""
 	sum["ExtraSocketMissing"] = ""
 	--sum["TinkerMissing"] = ""
 	sum.ArmorBonus = ClassArmorBonus[ucindex];
 	sum["ITEMSLOTFORCALC"] = INVSLOT_AVALIABLE
+	sum["ItemLink"] = {}
 	local not2hand
 	for i=INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do --zhengruiw02
 		local link = GetInventoryItemLink(unit, i);
 		if (link) and i ~= INVSLOT_BODY and i ~= INVSLOT_TABARD then
-			local _, _, quality, _, _, itemType, itemSubType, _, ItemEquipLoc = GetItemInfo(link); --TO DO: ADD UPGRADES
-			local iLevel = ISP:GetUpgradeLevel(link)
+			local itemName, _, quality, lv, _, itemType, itemSubType, _, ItemEquipLoc = GetItemInfo(link); --TO DO: ADD UPGRADES
+			local iLevel = ItemUpgradeInfo:GetUpgradedItemLevel(link);
+			local r, g, b = 1, 1, 1
+			if quality then
+				r, g, b = GetItemQualityColor(quality);
+			end
+			
 			--[[# 2 - Uncommon # 3 - Rare # 4 - Epic # 5 - Legendary # 7 Account]]
-			if(quality >=2 and quality <=7) then
+			if(quality >=2 and quality <7) then
 				sum["ITEMCOUNT"..quality] = (sum["ITEMCOUNT"..quality] or 0) + 1;
 				sum["ITEMLEVEL"..quality] = (sum["ITEMLEVEL"..quality] or 0) + iLevel;
+				sum["ItemLink"][i] = "["..iLevel.."]"..ElvUI[1]:RGBToHex(r,g,b).."["..itemName.."]|r";
 			end
+			if(quality == 7) then
+				sum["ITEMCOUNT"..quality] = (sum["ITEMCOUNT"..quality] or 0) + 1;
+				sum["ITEMLEVEL"..quality] = (sum["ITEMLEVEL"..quality] or 0) + ItemUpgradeInfo:GetHeirloomTrueLevel(link);
+				sum["ItemLink"][i] = "["..iLevel.."]"..ElvUI[1]:RGBToHex(r,g,b).."["..itemName.."]|r";
+			end
+
 			if iLevel then
 				sum["ITEMLEVEL"] = (sum["ITEMLEVEL"] or 0) + iLevel
 			end
 
-			local stats = ISP:GetItemStats(link);
+			local stats = {};
 
 			if (i ~= INVSLOT_NECK and 
 				i ~= INVSLOT_FINGER1 and 
@@ -584,7 +473,7 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				sum.ArmorBonus = nil
 			end
 			
-			if ((i == INVSLOT_OFFHAND) or (i == INVSLOT_MAINHAND and ItemEquipLoc ~= "INVTYPE_2HWEAPON")) and not not2hand then
+			if ((i == INVSLOT_OFFHAND) or (i == INVSLOT_MAINHAND and ItemEquipLoc ~= "INVTYPE_2HWEAPON" and ItemEquipLoc ~= "INVTYPE_RANGED" and ItemEquipLoc ~= "INVTYPE_RANGEDRIGHT")) and not not2hand then
 				sum["ITEMSLOTFORCALC"] = sum["ITEMSLOTFORCALC"] + 1
 				not2hand = true
 			end
@@ -621,11 +510,11 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			end
 			
 			local OriGemSlotCount = 0
-			for k, v in next, GetItemStats(link) do
-				if(GemSlots[k]) then
-					OriGemSlotCount = OriGemSlotCount + v
-				end
-			end
+		--	for k, v in next, GetItemStats(link) do
+		--		if(GemSlots[k]) then
+		--			OriGemSlotCount = OriGemSlotCount + v
+		--		end
+		--	end
 			if OriGemSlotCount < stats["Gems"]["GemSlotCount"] then
 				stats["Gems"]["ExtraSlot"] = 1
 			end
@@ -643,8 +532,7 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			if tonumber(Enchant) > 0 then --func for RS
 				stats["Enchanted"] = 1
 			end
-------
-	
+
 			if (stats["Gems"] ~= nil) then
 				if sum["Gems"] == nil then sum["Gems"] = {} end
 				for k,v in pairs(stats["Gems"]) do
@@ -657,78 +545,14 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				if i == slot then
 					if sum["CanEnchant"] == nil then sum["CanEnchant"] = 0 end
 					if sum["HasEnchant"] == nil then sum["HasEnchant"] = 0 end
-					if (i ~= INVSLOT_FINGER1) and (i ~= INVSLOT_FINGER2) then
-						sum["CanEnchant"] = sum["CanEnchant"] + 1
-					end
-					if (i ~= INVSLOT_FINGER1) and (i ~= INVSLOT_FINGER2) and stats["Enchanted"] then 
+					sum["CanEnchant"] = sum["CanEnchant"] + 1
+					if stats["Enchanted"] then 
 						sum["HasEnchant"] = sum["HasEnchant"] + 1
-					elseif ((i == INVSLOT_FINGER1) or (i == INVSLOT_FINGER2)) then
-						if (unit == "player") and isEnchanting then -- finger enchant
-							sum["CanEnchant"] = sum["CanEnchant"] + 1
-							if stats["Enchanted"] then
-								sum["HasEnchant"] = sum["HasEnchant"] + 1
-							else
-								sum["EnchantMissing"] = sum["EnchantMissing"]..shortname
-							end
-						else
-							if stats["Enchanted"] then
-								sum["CanEnchant"] = sum["CanEnchant"] + 1
-								sum["HasEnchant"] = sum["HasEnchant"] + 1
-							end
-						end
 					else
 						sum["EnchantMissing"] = sum["EnchantMissing"]..shortname
 					end
 				end
 			end
-			
-			for slot, shortname in next, RATING_SUMMARY_BLACKSMITH do
-				if i == slot then
-					if sum["CanExtraSocket"] == nil then sum["CanExtraSocket"] = 0 end
-					if sum["HasExtraSocket"] == nil then sum["HasExtraSocket"] = 0 end
-					if (i == INVSLOT_WAIST) then
-						sum["CanExtraSocket"] = sum["CanExtraSocket"] + 1
-						if not stats["Gems"]["ExtraSlot"] then
-							sum["ExtraSocketMissing"] = sum["ExtraSocketMissing"]..shortname
-						else
-							sum["HasExtraSocket"] = sum["HasExtraSocket"] + 1
-						end
-					elseif (unit == "player") and isBlacksmithing then
-						sum["CanExtraSocket"] = sum["CanExtraSocket"] + 1
-						if not stats["Gems"]["ExtraSlot"] then
-							sum["ExtraSocketMissing"] = sum["ExtraSocketMissing"]..shortname
-						else
-							sum["HasExtraSocket"] = sum["HasExtraSocket"] + 1
-						end
-					end
-				end
-			end
-			
-			-- if (i == INVSLOT_WAIST or i == INVSLOT_HAND or i == INVSLOT_BACK) then --and isEngineering then
-				-- for slot, shortname in next, RATING_SUMMARY_ENGINEERING do
-					-- if i == slot then
-						-- --tip:ClearLines() -- this is required or SetX won't work the second time its called
-						-- --tip:SetHyperlink(link)
-						-- local hasTinker
-						-- for i = 2, tip:NumLines() do
-							-- local text = tip[i]:GetText();
-							-- print(text)
-							-- --local r, g, b = tip[i]:GetTextColor()
-							-- if string.find(text, USE) then
-								-- hasTinker = true
-							-- end
-						-- end
-						-- if sum["CanTinker"] == nil then sum["CanTinker"] = 0 end
-						-- if sum["HasTinker"] == nil then sum["HasTinker"] = 0 end
-						-- sum["CanTinker"] = sum["CanTinker"] + 1
-						-- if hasTinker then
-							-- sum["HasTinker"] = sum["HasTinker"] + 1
-						-- else
-							-- sum["TinkerMissing"] = sum["TinkerMissing"]..shortname
-						-- end
-					-- end
-				-- end
-			-- end
 			
 			if (stats["Set"] ~= nil) then
 				for k,v in pairs(stats["Set"]) do
@@ -748,198 +572,3 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 
 	return sum;
 end
-
-GearStatsSummary_STATS_CAT = {
-	BASE = PLAYERSTAT_BASE_STATS,
-	MELEE = PLAYERSTAT_MELEE_COMBAT,
-	RANGED = PLAYERSTAT_RANGED_COMBAT,
-	TANK = PLAYERSTAT_DEFENSES,
-	CASTER = PLAYERSTAT_SPELL_COMBAT,
-	OTHER = PVP,
-}
-
-GearStatsSummary_STAT = {
-	BASE = { "STR", "AGI", "STA", "INT", "SPI", "MASTERY", },
-	MELEE = { "AP", "EXPERTISE", "MELEE_HASTE", "MELEE_HIT", "MELEE_CRIT",},
-	RANGED = { "RANGED_AP", "EXPERTISE", "RANGED_HASTE", "RANGED_HIT", "RANGED_CRIT",},
-	TANK = { "ARMOR", "DODGE", "PARRY", "BLOCK",},
-	CASTER = { "SPELL_DMG", "SPELL_HASTE", "SPELL_HIT", "SPELL_CRIT",},
-	--HEAL = { "SPELL_DMG", "SPELL_CRIT", "SPELL_HASTE",},
-	OTHER = { "RESILIENCE_REDUCTION", "PVP_POWER", }
-}
-
-GearStatsSummary_CLASS_STAT = {
-	PALADIN = {
-		[1] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "TANK", "MELEE", "OTHER", },
-		[6] = {"BASE", "MELEE", "OTHER", },
-	},
-	PRIEST = {
-		[1] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "CASTER", "OTHER", },
-		[3] = {"BASE", "CASTER", "OTHER", },
-	},
-	WARLOCK = {
-		[1] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "CASTER", "OTHER", },
-		[3] = {"BASE", "CASTER", "OTHER", },
-	},
-	WARRIOR = {
-		[1] = {"BASE", "MELEE", "OTHER", },
-		[2] = {"BASE", "MELEE", "OTHER", },
-		[3] = {"BASE", "TANK", "MELEE", "OTHER", },
-	},
-	HUNTER = {
-		[1] = {"BASE", "RANGED", "OTHER", },
-		[2] = {"BASE", "RANGED", "OTHER", },
-		[3] = {"BASE", "RANGED", "OTHER", },
-	},
-	SHAMAN = {
-		[1] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "MELEE", "OTHER", },
-		[3] = {"BASE", "CASTER", "OTHER", },	
-	},
-	ROGUE = {
-		[1] = {"BASE", "MELEE", "OTHER", },
-		[2] = {"BASE", "MELEE", "OTHER", },
-		[3] = {"BASE", "MELEE", "OTHER", },
-	},
-	MAGE = {
-		[1] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "CASTER", "OTHER", },
-		[3] = {"BASE", "CASTER", "OTHER", },
-	},
-	DEATHKNIGHT = {
-		[1] = {"BASE", "TANK", "MELEE", "OTHER", },
-		[2] = {"BASE", "MELEE", "OTHER", },
-		[3] = {"BASE", "MELEE", "OTHER", },
-	},
-	DRUID = {
-		[1] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "MELEE", "OTHER", },
-		[3] = {"BASE", "TANK", "MELEE", "OTHER", },
-		[4] = {"BASE", "CASTER", "OTHER"},
-	},
-	MONK = {
-		[1] = {"BASE", "TANK", "MELEE", "OTHER", },
-		[3] = {"BASE", "CASTER", "OTHER", },
-		[2] = {"BASE", "MELEE", "OTHER", },	
-	},
-	ALL = {"BASE", "TANK", "MELEE", "CASTER", "OTHER",}
-}
-
-local ratingToEffect = function(sum, stat, val, class, level) return ISP:GetRatingsFromStat(val, level, stat , class, specid ) or 0,val end
-
-GearStatsSummary_Calc = {
-	STR = nil,
-	AGI = function(sum, stat, val, class, level) return val, ISP:GetCritFromAgi(val, level, class) end,
-	STA = function(sum, stat, val, class, level) return val, ISP:GetHPFromSta(val, level) end,
-	INT = function(sum, stat, val, class, level) return val, ISP:GetCritFromInt(val, level, class) end,
-	SPI = function(sum, stat, val, class, level) return val, ISP:GetMPFromSpt(val, class) end,
-	MASTERY = function(sum, stat, val, class, level, specid) return val, ISP:GetRatingsFromStat(val, level, stat , class, specid ) end,
-
-	AP = function(sum, stat, val, class, level) return val + ISP:GetAPFromAgi(sum[StatToStatName["AGI"]] or 0, class) + ISP:GetAPFromStr(sum[StatToStatName["STR"]] or 0, class) end,
-	MELEE_HIT = ratingToEffect,
-	MELEE_CRIT = function(sum, stat, val, class, level)  local e = ISP:GetRatingsFromStat( val, level, stat ) return e + ISP:GetCritFromAgi(sum[StatToStatName["AGI"]] or 0, level, class), val end,
-	MELEE_HASTE = ratingToEffect,
-	EXPERTISE = ratingToEffect,
-
-	RANGED_AP = function(sum, stat, val, class, level) return val + (sum["AP"] or 0) + ISP:GetRAPFromAgi(sum["AGI"] or 0, class),val end,
-	RANGED_HIT = ratingToEffect,
-	RANGED_CRIT = function(sum, stat, val, class, level)  local e = ISP:GetRatingsFromStat( val, level, stat ) return e + ISP:GetCritFromAgi(sum[StatToStatName["AGI"]] or 0, level, class), val end,
-	RANGED_HASTE = ratingToEffect,
-
-	ARMOR = nil,
-	DODGE = ratingToEffect,
-	PARRY = ratingToEffect,
-	BLOCK = nil,
-
-	RESILIENCE_REDUCTION = ratingToEffect,
-	PVP_POWER = ratingToEffect,
-	SPELL_DMG = function(sum, stat, val, class, level) return val + ISP:GetSPFromInt(sum[StatToStatName["INT"]] or 0, class) end,
-	SPELL_HIT = function(sum, stat, val, class, level) local v = val + ( sum[StatToStatName["EXPERTISE"]] or 0 ) return ISP:GetRatingsFromStat(v, level, stat) or 0, v end,
-	SPELL_CRIT = function(sum, stat, val, class, level)  local e = ISP:GetRatingsFromStat( val, level, stat ) return e + ISP:GetCritFromInt(sum[StatToStatName["AGI"]] or 0, level, class), val end,
-	SPELL_HASTE = ratingToEffect,
-
-}
-
-local FI = "%d";
-local FP = "%.2f%%";
-local FL = "%.1f";
-local FR = GREEN_FONT_COLOR_CODE..FP..FONT_COLOR_CODE_CLOSE.." ( "..FI.." ) ";
-local CFI = GREEN_FONT_COLOR_CODE..FI..FONT_COLOR_CODE_CLOSE
-local BFI = GREEN_FONT_COLOR_CODE.."%d"..FONT_COLOR_CODE_CLOSE
-local FCRI = GREEN_FONT_COLOR_CODE..FP..FONT_COLOR_CODE_CLOSE.." ( "..FI.." ) ";
-
-GearStatsSummary_FORMAT = {
-	STR = BFI,
-	AGI = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_MELEE_CRIT..FONT_COLOR_CODE_CLOSE.." %.2f%%".." ) ",
-	STA = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_STA_NO_BONUS..FONT_COLOR_CODE_CLOSE.." ) ",
-	INT = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_SPELL_CRIT..FONT_COLOR_CODE_CLOSE..FP.." ) ",
-	--SPI = BFI.." ( "..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_MANA_REGEN..FONT_COLOR_CODE_CLOSE.." %.2f".." ) ",
-	SPI = BFI,
-	MASTERY = BFI.." ("..NORMAL_FONT_COLOR_CODE.."%s: "..FONT_COLOR_CODE_CLOSE..FP.." ) ",
-
-	AP = CFI,
-	FERAL_AP = CFI,
-	MELEE_HIT = FR,
-	MELEE_CRIT = FCRI,
-	MELEE_HASTE = FR,
-	EXPERTISE = FR,
-
-	RANGED_AP = CFI.." ( "..FI.." ) ",
-	RANGED_HIT = FR,
-	RANGED_CRIT = FCRI,
-	RANGED_HASTE = FR,
-
-	ARMOR = CFI,
-	DODGE = FR,
-	PARRY = FR,
-	BLOCK = FR,
-
-	RESILIENCE_REDUCTION = FR,
-	PVP_POWER = FR,
-
-	SPELL_DMG = CFI,
-	HEAL = CFI,
-	SPELL_HIT = FR,
-	SPELL_CRIT = FCRI,
-	SPELL_HASTE = FR,
-}
-
-StatToStatName = {
-	["STR"] = "ITEM_MOD_STRENGTH_SHORT",
-	["AGI"] = "ITEM_MOD_AGILITY_SHORT",
-	["STA"] = "ITEM_MOD_STAMINA_SHORT",
-	["INT"] = "ITEM_MOD_INTELLECT_SHORT",
-	["SPI"] = "ITEM_MOD_SPIRIT_SHORT",
-	["MASTERY"] = "ITEM_MOD_MASTERY_RATING_SHORT",
-
-	["AP"] = "ITEM_MOD_ATTACK_POWER_SHORT",
-	["MELEE_HIT"] = "ITEM_MOD_HIT_RATING_SHORT",
-	["MELEE_CRIT"] = "ITEM_MOD_CRIT_RATING_SHORT",
-	["MELEE_HASTE"] = "ITEM_MOD_HASTE_RATING_SHORT",
-	["EXPERTISE"] = "ITEM_MOD_EXPERTISE_RATING_SHORT",
-
-	["RANGED_AP"] = "ITEM_MOD_ATTACK_POWER_SHORT",
-	["RANGED_HIT"] = "ITEM_MOD_HIT_RATING_SHORT",
-	["RANGED_CRIT"] = "ITEM_MOD_CRIT_RATING_SHORT",
-	["RANGED_HASTE"] = "ITEM_MOD_HASTE_RATING_SHORT",
-
-	["ARMOR"] = "RESISTANCE0_NAME",
-	--["DEFENSE"] = "",
-	["DODGE"] = "ITEM_MOD_DODGE_RATING_SHORT",
-	["PARRY"] = "ITEM_MOD_PARRY_RATING_SHORT",
-	["BLOCK"] = "ITEM_MOD_BLOCK_RATING_SHORT",
-	--["BLOCK_VALUE"] = "",
-	--["TOTAL_AVOID"] = "",
-	["RESILIENCE_REDUCTION"] = "ITEM_MOD_RESILIENCE_RATING_SHORT",
-	["PVP_POWER"] = "ITEM_MOD_PVP_POWER_SHORT",
-
-	["SPELL_DMG"] = "ITEM_MOD_SPELL_POWER_SHORT",
-	["SPELL_HIT"] = "ITEM_MOD_HIT_RATING_SHORT",
-	["SPELL_CRIT"] = "ITEM_MOD_CRIT_RATING_SHORT",
-	["SPELL_HASTE"] = "ITEM_MOD_HASTE_RATING_SHORT",
-
-	["MANA_REG"] = "ITEM_MOD_MANA_REGENERATION_SHORT",
-}
